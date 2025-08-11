@@ -88,41 +88,55 @@ ${prompt_processed}
   }
   
   const args = [];
-  if (model) { args.push(CLI.FLAGS.MODEL, model); }
+  if (model) { args.push(CLI.FLAGS.MODEL, `"${model}"`); }
   if (sandbox) { args.push(CLI.FLAGS.SANDBOX); }
   
-  // Quote and escape prompt when executed through a shell (Windows)
-  const finalPrompt = process.platform === 'win32'
-    ? `"${prompt_processed.replace(/"/g, '""')}"`
-    : prompt_processed;
-    
-  args.push(CLI.FLAGS.PROMPT, finalPrompt);
-  // Wrap prompt in quotes to handle spaces and special characters
-  args.push(CLI.FLAGS.PROMPT, `"${prompt_processed.replace(/"/g, '\\"')}"`);
+  // For complex prompts (changeMode or with @ symbols), use stdin instead of -p flag
+  // This avoids all shell escaping issues with quotes and newlines
+  const useStdin = changeMode || prompt_processed.includes('@');
+  let stdinData: string | undefined;
+  
+  if (useStdin) {
+    // Pass prompt via stdin to avoid shell escaping issues
+    stdinData = prompt_processed;
+    Logger.debug(`Using stdin for prompt (length: ${prompt_processed.length} chars)`);
+  } else {
+    // Simple prompts can use -p flag with proper escaping
+    const escapedPrompt = process.platform === 'win32'
+      ? prompt_processed.replace(/"/g, '""')  // Windows: escape quotes by doubling
+      : prompt_processed.replace(/"/g, '\\"'); // Unix: escape with backslash
+    args.push(CLI.FLAGS.PROMPT, `"${escapedPrompt}"`);
+  }
+  
+  // Log the exact command being executed for debugging
+  Logger.debug(`Executing command: ${CLI.COMMANDS.GEMINI} ${args.join(' ')}${useStdin ? ' [prompt via stdin]' : ''}`);
   
   try {
-    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress);
+    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress, stdinData);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes(ERROR_MESSAGES.QUOTA_EXCEEDED) && model !== MODELS.FLASH) {
       Logger.warn(`${ERROR_MESSAGES.QUOTA_EXCEEDED}. Falling back to ${MODELS.FLASH}.`);
       await sendStatusMessage(STATUS_MESSAGES.FLASH_RETRY);
       const fallbackArgs = [];
-      fallbackArgs.push(CLI.FLAGS.MODEL, MODELS.FLASH);
+      fallbackArgs.push(CLI.FLAGS.MODEL, `"${MODELS.FLASH}"`);
       if (sandbox) {
         fallbackArgs.push(CLI.FLAGS.SANDBOX);
       }
       
-      // Same quoting logic for fallback
-      const fallbackPrompt = process.platform === 'win32'
-        ? `"${prompt_processed.replace(/"/g, '""')}"`
-        : prompt_processed;
-        
-      fallbackArgs.push(CLI.FLAGS.PROMPT, fallbackPrompt);
-      // Wrap prompt in quotes to handle spaces and special characters
-      fallbackArgs.push(CLI.FLAGS.PROMPT, `"${prompt_processed.replace(/"/g, '\\"')}"`);
+      // Use same stdin logic for fallback
+      if (!useStdin) {
+        const escapedPrompt = process.platform === 'win32'
+          ? prompt_processed.replace(/"/g, '""')
+          : prompt_processed.replace(/"/g, '\\"');
+        fallbackArgs.push(CLI.FLAGS.PROMPT, `"${escapedPrompt}"`);
+      }
+      
+      // Log the fallback command being executed for debugging
+      Logger.debug(`Executing fallback command: ${CLI.COMMANDS.GEMINI} ${fallbackArgs.join(' ')}${useStdin ? ' [prompt via stdin]' : ''}`);
+      
       try {
-        const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress);
+        const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress, stdinData);
         Logger.warn(`Successfully executed with ${MODELS.FLASH} fallback.`);
         await sendStatusMessage(STATUS_MESSAGES.FLASH_SUCCESS);
         return result;

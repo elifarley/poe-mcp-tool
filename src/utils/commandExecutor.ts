@@ -1,87 +1,34 @@
 import { spawn } from "child_process";
 import { Logger } from "./logger.js";
 
-// Sanitize command and arguments to prevent shell injection and flag injection
-function sanitizeInput(input: string): string {
-  // Don't sanitize known flags
-  if (input.startsWith('-')) {
-    return input;  // Keep flags as-is
-  }
-  
-  // For file paths and other arguments, just handle backslashes for Windows
-  if (process.platform === "win32") {
-    // Windows paths use backslashes, which need to be escaped in some contexts
-    // But for gemini CLI, we should keep them as-is since it expects Windows paths
-    return input;
-  }
-  
-  // For Unix-like systems, basic sanitization
-  let sanitized = input.replace(/[;&|`$(){}[\]<>]/g, '');
-  return sanitized;
-}
-
-function validateCommand(command: string): boolean {
-  // Only allow specific whitelisted commands (without extensions)
-  const allowedCommands = ['gemini', 'echo'];
-  const baseCommand = command.split(/[/\\]/).pop()?.toLowerCase() || '';
-  // Remove any extension for validation
-  const commandWithoutExt = baseCommand.replace(/\.(exe|cmd|bat|sh)$/, '');
-  return allowedCommands.includes(commandWithoutExt);
-}
-
-function resolveWindowsCommand(command: string): string {
-  if (process.platform !== "win32") return command;
-  
-  // Check if command already has extension
-  if (command.endsWith('.exe') || command.endsWith('.cmd') || command.endsWith('.bat')) {
-    return command;
-  }
-  
-  // For Windows, just return the command as-is and let Windows handle resolution
-  // Windows will automatically try .exe, .cmd, .bat extensions
-  return command;
-}
-
-
 export async function executeCommand(
   command: string,
   args: string[],
-  onProgress?: (newOutput: string) => void
+  onProgress?: (newOutput: string) => void,
+  stdinData?: string
 ): Promise<string> {
-  const resolvedCommand = resolveWindowsCommand(command);
-  
   return new Promise((resolve, reject) => {
-    // Validate command before execution
-    if (!validateCommand(resolvedCommand)) {
-      reject(new Error(`Command not allowed: ${resolvedCommand}. Only gemini, gemini.exe, and npx are permitted.`));
-      return;
-    }
-
-    // Sanitize arguments to prevent shell injection
-    const sanitizedArgs = args.map(arg => sanitizeInput(arg));
-    
     const startTime = Date.now();
-    Logger.commandExecution(resolvedCommand, sanitizedArgs, startTime);
+    Logger.commandExecution(command, args, startTime);
 
-    const childProcess = spawn(resolvedCommand, sanitizedArgs, {
+    const childProcess = spawn(command, args, {
       env: process.env,
-      shell: process.platform === "win32",
-      stdio: ["ignore", "pipe", "pipe"],
-      cwd: process.cwd()
+      shell: true,
+      stdio: stdinData ? ["pipe", "pipe", "pipe"] : ["ignore", "pipe", "pipe"],
     });
-
-    if (!childProcess.stdout || !childProcess.stderr) {
-      childProcess.kill();
-      reject(new Error("Process spawning failed: streams not available"));
-      return;
-    }
 
     let stdout = "";
     let stderr = "";
     let isResolved = false;
     let lastReportedLength = 0;
     
-    childProcess.stdout.on("data", (data: Buffer) => {
+    // Write stdin data if provided
+    if (stdinData && childProcess.stdin) {
+      childProcess.stdin.write(stdinData);
+      childProcess.stdin.end();
+    }
+    
+    childProcess.stdout?.on("data", (data) => {
       stdout += data.toString();
       
       // Report new content if callback provided
@@ -94,7 +41,7 @@ export async function executeCommand(
 
 
     // CLI level errors
-    childProcess.stderr.on("data", (data: Buffer) => {
+    childProcess.stderr?.on("data", (data) => {
       stderr += data.toString();
       // find RESOURCE_EXHAUSTED when gemini-2.5-pro quota is exceeded
       if (stderr.includes("RESOURCE_EXHAUSTED")) {
@@ -118,14 +65,14 @@ export async function executeCommand(
         Logger.error(`Gemini Quota Error: ${JSON.stringify(errorJson, null, 2)}`);
       }
     });
-    childProcess.on("error", (error: Error) => {
+    childProcess.on("error", (error) => {
       if (!isResolved) {
         isResolved = true;
         Logger.error(`Process error:`, error);
         reject(new Error(`Failed to spawn command: ${error.message}`));
       }
     });
-    childProcess.on("close", (code: number | null) => {
+    childProcess.on("close", (code) => {
       if (!isResolved) {
         isResolved = true;
         if (code === 0) {
