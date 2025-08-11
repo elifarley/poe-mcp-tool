@@ -17,11 +17,14 @@ export async function executeCommand(
     let stderr = "";
     let isResolved = false;
     let lastReportedLength = 0;
+    
+    // Only use shell on Windows to avoid injection risks on Unix-like systems
+    const isWindows = process.platform === 'win32';
 
     if (stdinData) {
       childProcess = spawn(command, args, {
         env: process.env,
-        shell: true,
+        shell: isWindows,
         stdio: ['pipe', 'pipe', 'pipe'],
       }) as ChildProcessByStdio<Writable, Readable, Readable>;
 
@@ -32,7 +35,7 @@ export async function executeCommand(
     } else {
       childProcess = spawn(command, args, {
         env: process.env,
-        shell: true,
+        shell: isWindows,
         stdio: ['ignore', 'pipe', 'pipe'],
       }) as ChildProcessByStdio<null, Readable, Readable>;
     }
