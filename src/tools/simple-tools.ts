@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { UnifiedTool } from './registry.js';
-import { executeCommand } from '../utils/commandExecutor.js';
 
 const pingArgsSchema = z.object({
   prompt: z.string().default('').describe("Message to echo "),
@@ -16,7 +15,7 @@ export const pingTool: UnifiedTool = {
   category: 'simple',
   execute: async (args, onProgress) => {
     const message = args.prompt || args.message || "Pong!";
-    return executeCommand("echo", [message as string], onProgress);
+    return `Poe MCP Tool v2.0.0 - ${message}`;
   }
 };
 
@@ -31,6 +30,22 @@ export const helpTool: UnifiedTool = {
   },
   category: 'simple',
   execute: async (args, onProgress) => {
-    return executeCommand("gemini", ["-help"], onProgress);
+    return `Poe MCP Tool v2.0.0
+
+Available tools:
+- analyze-with-poe: Analyze code and files using Poe AI models
+- brainstorm: Generate ideas using structured methodologies
+- ping: Test connection
+- help: Show this message
+
+Available models:
+- Claude-Sonnet-4.5 (default)
+- GPT-5.1
+- GPT-5.1-Codex
+- Gemini-3.0-Pro
+- Grok-4-fast-reasoning
+- glm-4.6
+
+For more information, visit: https://github.com/jamubc/poe-mcp-tool`;
   }
 };

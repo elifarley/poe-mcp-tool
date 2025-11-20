@@ -1,7 +1,5 @@
 import { z } from 'zod';
 import { UnifiedTool } from './registry.js';
-import { getChunks } from '../utils/chunkCache.js';
-import { formatChangeModeResponse, summarizeChangeModeEdits } from '../utils/changeModeTranslator.js';
 import { Logger } from '../utils/logger.js';
 
 const inputSchema = z.object({
@@ -30,51 +28,19 @@ export const fetchChunkTool: UnifiedTool = {
   
   execute: async (args: any, onProgress?: (newOutput: string) => void): Promise<string> => {
     const { cacheKey, chunkIndex } = args;
-    
+
     Logger.toolInvocation('fetch-chunk', args);
     Logger.debug(`Fetching chunk ${chunkIndex} with cache key: ${cacheKey}`);
-    
-    // Retrieve cached chunks
-    const chunks = getChunks(cacheKey);
-    
-    if (!chunks) {
-      return `❌ Cache miss: No chunks found for cache key "${cacheKey}". 
 
-  Possible reasons:
-  1. The cache key is incorrect, Have you ran ask-gemini with changeMode enabled?
-  2. The cache has expired (10 minute TTL)
-  3. The MCP server was restarted and the file-based cache was cleared
+    // TODO: Chunking not yet implemented for Poe API
+    return `❌ Chunking feature not yet implemented for Poe API.
 
-Please re-run the original changeMode request to regenerate the chunks.`;
-    }
-    
-    // Validate chunk index
-    if (chunkIndex < 1 || chunkIndex > chunks.length) {
-      return `❌ Invalid chunk index: ${chunkIndex}
+This feature was specific to Gemini's changeMode output format.
+For Poe API, responses are returned in full (up to 100k characters).
 
-Available chunks: 1 to ${chunks.length}
-You requested: ${chunkIndex}
-
-Please use a valid chunk index.`;
-    }
-    
-    // Get the requested chunk
-    const chunk = chunks[chunkIndex - 1];
-    
-    // Format the response
-    let result = formatChangeModeResponse(
-      chunk.edits,
-      { current: chunkIndex, total: chunks.length, cacheKey }
-    );
-    
-    // Add summary for first chunk
-    if (chunkIndex === 1 && chunks.length > 1) {
-      const allEdits = chunks.flatMap(c => c.edits);
-      result = summarizeChangeModeEdits(allEdits, true) + '\n\n' + result;
-    }
-    
-    Logger.debug(`Returning chunk ${chunkIndex} of ${chunks.length} with ${chunk.edits.length} edits`);
-    
-    return result;
+If you need to process large responses, consider:
+1. Breaking your request into smaller parts
+2. Using more specific queries
+3. Requesting summaries first, then details`;
   }
 };

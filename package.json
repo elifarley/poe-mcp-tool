@@ -1,11 +1,11 @@
 {
-  "name": "gemini-mcp-tool",
-  "version": "1.1.4",
-  "description": "MCP server for Gemini CLI integration",
+  "name": "poe-mcp-tool",
+  "version": "2.0.0",
+  "description": "MCP server for Poe API - Access Claude, GPT-5, Codex, Gemini, and more",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "gemini-mcp": "dist/index.js"
+    "poe-mcp-tool": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -22,10 +22,15 @@
   "keywords": [
     "mcp",
     "modelcontextprotocol",
+    "poe",
+    "claude",
+    "gpt-5",
+    "codex",
     "gemini",
-    "cli",
     "ai",
-    "llm"
+    "llm",
+    "anthropic",
+    "openai"
   ],
   "author": "jamubc",
   "license": "MIT",

@@ -1,33 +1,55 @@
 
 
 // Logging
-export const LOG_PREFIX = "[GMCPT]";
+export const LOG_PREFIX = "[POE-MCP]";
 
 // Error messages
 export const ERROR_MESSAGES = {
-  QUOTA_EXCEEDED: "Quota exceeded for quota metric 'Gemini 2.5 Pro Requests'",
-  QUOTA_EXCEEDED_SHORT: "⚠️ Gemini 2.5 Pro daily quota exceeded. Please retry with model: 'gemini-2.5-flash'",
   TOOL_NOT_FOUND: "not found in registry",
   NO_PROMPT_PROVIDED: "Please provide a prompt for analysis. Use @ syntax to include files (e.g., '@largefile.js explain what this does') or ask general questions",
+  API_KEY_NOT_FOUND: "POE_API_KEY not found. Set via: export POE_API_KEY=your-key OR run: npx poe-code login",
 } as const;
 
 // Status messages
 export const STATUS_MESSAGES = {
-  QUOTA_SWITCHING: "🚫 Gemini 2.5 Pro quota exceeded, switching to Flash model...",
-  FLASH_RETRY: "⚡ Retrying with Gemini 2.5 Flash...",
-  FLASH_SUCCESS: "✅ Flash model completed successfully",
-  SANDBOX_EXECUTING: "🔒 Executing Gemini CLI command in sandbox mode...",
-  GEMINI_RESPONSE: "Gemini response:",
+  POE_RESPONSE: "Poe response:",
   // Timeout prevention messages
   PROCESSING_START: "🔍 Starting analysis (may take 5-15 minutes for large codebases)",
-  PROCESSING_CONTINUE: "⏳ Still processing... Gemini is working on your request",
+  PROCESSING_CONTINUE: "⏳ Still processing... Poe is working on your request",
   PROCESSING_COMPLETE: "✅ Analysis completed successfully",
 } as const;
 
-// Models
+// Poe Models
+export const POE_MODELS = {
+  // Primary models (verified and available)
+  CLAUDE_SONNET: "Claude-Sonnet-4.5",
+  GPT_5: "GPT-5.1",
+  GPT_CODEX: "GPT-5.1-Codex",
+  GPT_4O: "GPT-4o",
+  GLM: "glm-4.6",
+  CLAUDE_35: "Claude-3.5-Sonnet",
+
+  // Extended models (user-requested, verified)
+  GEMINI_PRO: "Gemini-3.0-Pro",
+  GROK_REASONING: "Grok-4-fast-reasoning",
+} as const;
+
+// Model categories for smart routing
+export const MODEL_CATEGORIES = {
+  CODE_ANALYSIS: [POE_MODELS.CLAUDE_SONNET, POE_MODELS.GPT_CODEX] as const,
+  REASONING: [POE_MODELS.GPT_5, POE_MODELS.GROK_REASONING] as const,
+  GENERAL: [POE_MODELS.GPT_4O, POE_MODELS.GLM] as const,
+  FALLBACK: [POE_MODELS.GLM, POE_MODELS.CLAUDE_35] as const,
+} as const;
+
+// Default model selection
+export const DEFAULT_MODEL = POE_MODELS.CLAUDE_SONNET;
+export const FALLBACK_MODEL = POE_MODELS.GLM;
+
+// Backward compatibility (deprecated)
 export const MODELS = {
-  PRO: "gemini-2.5-pro",
-  FLASH: "gemini-2.5-flash",
+  PRO: POE_MODELS.CLAUDE_SONNET, // Map old gemini-pro to Claude
+  FLASH: POE_MODELS.GLM, // Map old gemini-flash to GLM
 } as const;
 
 // MCP Protocol Constants

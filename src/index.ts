@@ -29,8 +29,8 @@ import {
 
 const server = new Server(
   {
-    name: "gemini-cli-mcp",
-    version: "1.1.4",
+    name: "poe-mcp-tool",
+    version: "2.0.0",
   },{
     capabilities: {
       tools: {},
@@ -92,11 +92,11 @@ function startProgressUpdates(
   latestOutput = ""; // Reset latest output
   
   const progressMessages = [
-    `🧠 ${operationName} - Gemini is analyzing your request...`,
+    `🧠 ${operationName} - Poe is analyzing your request...`,
     `📊 ${operationName} - Processing files and generating insights...`,
     `✨ ${operationName} - Creating structured response for your review...`,
     `⏱️ ${operationName} - Large analysis in progress (this is normal for big requests)...`,
-    `🔍 ${operationName} - Still working... Gemini takes time for quality results...`,
+    `🔍 ${operationName} - Still working... Poe takes time for quality results...`,
   ];
   
   let messageIndex = 0;
@@ -252,7 +252,23 @@ server.setRequestHandler(GetPromptRequestSchema, async (request: GetPromptReques
 
 // Start the server
 async function main() {
-  Logger.debug("init gemini-mcp-tool");
-  const transport = new StdioServerTransport(); await server.connect(transport);
-  Logger.debug("gemini-mcp-tool listening on stdio");
-} main().catch((error) => {Logger.error("Fatal error:", error); process.exit(1); }); 
+  Logger.debug("init poe-mcp-tool v2.0.0");
+
+  // Check for API key on startup
+  try {
+    const { getApiKey } = await import('./utils/poeExecutor.js');
+    getApiKey(); // Will throw if not found
+    Logger.debug("Poe API key found");
+  } catch (error) {
+    Logger.warn("Warning: POE_API_KEY not configured. Set via: export POE_API_KEY=your-key");
+  }
+
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  Logger.debug("poe-mcp-tool listening on stdio");
+}
+
+main().catch((error) => {
+  Logger.error("Fatal error:", error);
+  process.exit(1);
+}); 
