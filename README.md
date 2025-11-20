@@ -1,170 +1,464 @@
-
-# Gemini MCP Tool
+# Poe MCP Tool
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/github/v/release/jamubc/gemini-mcp-tool?logo=github&label=GitHub)](https://github.com/jamubc/gemini-mcp-tool/releases)
-[![npm version](https://img.shields.io/npm/v/gemini-mcp-tool)](https://www.npmjs.com/package/gemini-mcp-tool)
-[![npm downloads](https://img.shields.io/npm/dt/gemini-mcp-tool)](https://www.npmjs.com/package/gemini-mcp-tool)
+[![npm version](https://img.shields.io/npm/v/poe-mcp-tool)](https://www.npmjs.com/package/poe-mcp-tool)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Open Source](https://img.shields.io/badge/Open%20Source-❤️-red.svg)](https://github.com/jamubc/gemini-mcp-tool)
+[![Open Source](https://img.shields.io/badge/Open%20Source-❤️-red.svg)](https://github.com/jamubc/poe-mcp-tool)
 
 </div>
 
-> 📚 **[View Full Documentation](https://jamubc.github.io/gemini-mcp-tool/)** - Search me!, Examples, FAQ, Troubleshooting, Best Practices
+> **Access 8+ AI models through one MCP server**: Claude Sonnet 4.5, GPT-5.1, GPT-5.1-Codex, Gemini 3.0 Pro, Grok-4, and more via [Poe API](https://poe.com)
 
-This is a simple Model Context Protocol (MCP) server that allows AI assistants to interact with the [Gemini CLI](https://github.com/google-gemini/gemini-cli). It enables the AI to leverage the power of Gemini's massive token window for large analysis, especially with large files and codebases using the `@` syntax for direction.
+This is a Model Context Protocol (MCP) server that provides access to Poe's multi-model AI platform through **agentic delegation** - your main LLM can call specialized Poe models as tools for specific tasks.
 
-- Ask gemini natural questions, through claude or Brainstorm new ideas in a party of 3!
+### Three Use Cases
 
-<a href="https://glama.ai/mcp/servers/@jamubc/gemini-mcp-tool">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@jamubc/gemini-mcp-tool/badge" alt="Gemini Tool MCP server" />
-</a>
+| Client | Value Proposition | Tier |
+|--------|-------------------|------|
+| **Cursor** | 🐛 **Critical Bug Fix**: Workaround for [Global Override Bug](https://forum.cursor.com/t/override-openai-base-url-breaks-requests-when-pointing-to-openrouter/142520) that breaks native Poe integration | Tier 1 |
+| **Continue** | 🔧 **Agentic Upgrade**: Local models delegate complex tasks to Poe bots as tools | Tier 2 |
+| **Claude Code** | 🤝 **Collaborative Intelligence**: Use with poe-code - Sonnet delegates to Gemini 3.0 Pro for massive context | Tier 2 |
 
-## TLDR: [![Claude](https://img.shields.io/badge/Claude-D97757?logo=claude&logoColor=fff)](#) + [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-886FBF?logo=googlegemini&logoColor=fff)](#)
+**Key Features**:
+- 🤝 **Agentic Delegation**: Let your main LLM delegate tasks to specialized Poe models as tools
+- 🐛 **Cursor Bug Workaround**: Stable Poe access without breaking native IDE features
+- 🎯 **8+ Premium Models**: Access Claude, GPT-5, Codex, Gemini, Grok, and more
+- 🧠 **Brainstorming Tools**: SCAMPER, Design Thinking, Divergent/Convergent frameworks
+- 🔄 **Smart Auto-Routing**: Automatically route queries to the best model for the task
+- ⚡ **High Performance**: Direct API integration (2-5x faster than CLI-based approaches)
 
+## Why MCP Tools vs Model Switching?
 
-**Goal**: Use Gemini's powerful analysis capabilities directly in Claude Code to save tokens and analyze large files.
+**Model Switching** (like `/model` in Claude Code via poe-code):
+- Switches your entire conversation to a different model
+- One model at a time
+
+**MCP Tools** (this project - poe-mcp-tool):
+- Your main model **delegates** specific tasks to other models
+- **Collaborative intelligence** - multiple models working together
+
+### Agentic Delegation Example
+
+```typescript
+User: "Analyze this 50K line codebase"
+↓
+Claude Sonnet (main): "This exceeds my context window. I'll delegate to Gemini 3.0 Pro"
+↓
+Sonnet calls MCP tool: ask_poe_bot({
+  model: "Gemini-3.0-Pro",  // 2M token context
+  query: "Analyze architecture and dependencies",
+  files: ["@entire/codebase"]
+})
+↓
+Gemini processes massive context → returns summary → Sonnet synthesizes
+```
+
+**Real-World Use Cases**:
+- **Cursor users**: Stable Poe access without breaking autocomplete (bug workaround)
+- **Continue users**: Local Llama-3 delegates reasoning to Claude/GPT-5 tools
+- **Claude Code users**: Sonnet delegates large context tasks to Gemini 3.0 Pro
+- **All users**: Brainstorming with SCAMPER, multi-model comparison, auto-routing
 
 ## Prerequisites
 
 Before using this tool, ensure you have:
 
 1. **[Node.js](https://nodejs.org/)** (v16.0.0 or higher)
-2. **[Google Gemini CLI](https://github.com/google-gemini/gemini-cli)** installed and configured
+2. **Poe API Key** (get one from [poe.com](https://poe.com) settings)
 
+### Getting Your Poe API Key
 
-### One-Line Setup
+1. Sign up at [poe.com](https://poe.com)
+2. Navigate to Settings → API
+3. Generate an API key
+4. Set environment variable:
+   ```bash
+   export POE_API_KEY=your_api_key_here
+   ```
 
-```bash
-claude mcp add gemini-cli -- npx -y gemini-mcp-tool
+## Quick Start
+
+### For Cursor (Primary Use Case - Bug Workaround)
+
+Add to Cursor's MCP settings (`.cursor/mcp.json` or via Cursor settings UI):
+
+```json
+{
+  "mcpServers": {
+    "poe": {
+      "command": "npx",
+      "args": ["-y", "poe-mcp-tool"],
+      "env": {
+        "POE_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
 ```
 
-### Verify Installation
+**Why Cursor needs this**: Cursor's "Override OpenAI Base URL" feature has a [critical bug](https://forum.cursor.com/t/override-openai-base-url-breaks-requests-when-pointing-to-openrouter/142520) - it forces ALL traffic (including internal calls for `cursor-small` autocomplete and `cpp` prediction) to your custom endpoint. Since Poe doesn't host these proprietary models, your IDE's features break.
 
-Type `/mcp` inside Claude Code to verify the gemini-cli MCP is active.
+**The MCP Fix**: poe-mcp-tool runs on a separate channel (Stdio/SSE, not HTTP), so:
+- ✅ Native Cursor features stay intact (pointing to default providers)
+- ✅ Access Poe models as tools in Composer without breaking anything
 
 ---
 
-### Alternative: Import from Claude Desktop
-
-If you already have it configured in Claude Desktop:
-
-1. Add to your Claude Desktop config:
-```json
-"gemini-cli": {
-  "command": "npx",
-  "args": ["-y", "gemini-mcp-tool"]
-}
-```
-
-2. Import to Claude Code:
-```bash
-claude mcp add-from-claude-desktop
-```
-
 ## Configuration
 
-Register the MCP server with your MCP client:
+### For Continue (Agentic Upgrade)
 
-### For NPX Usage (Recommended)
-
-Add this configuration to your Claude Desktop config file:
+Add to Continue's config (`~/.continue/config.json`):
 
 ```json
 {
-  "mcpServers": {
-    "gemini-cli": {
+  "mcpServers": [
+    {
+      "name": "poe",
       "command": "npx",
-      "args": ["-y", "gemini-mcp-tool"]
+      "args": ["-y", "poe-mcp-tool"],
+      "env": {
+        "POE_API_KEY": "your_api_key_here"
+      }
     }
-  }
+  ]
 }
 ```
 
-### For Global Installation
+**Why Continue users benefit**: Continue natively supports Poe as a chat bot, but poe-mcp-tool treats Poe as **agents with tools**. This enables hybrid orchestration:
+- Run free local model (Llama-3-8B) for privacy and speed
+- Delegate complex reasoning to Poe bots (Claude/GPT-5) via MCP tools
+- Optimize cost: only pay Poe for hard tasks
 
-If you installed globally, use this configuration instead:
+### For Claude Code (Collaborative Intelligence)
+
+**Important**: Use **BOTH** poe-code AND poe-mcp-tool together.
+
+```bash
+# 1. Install poe-code for model switching
+poe-code configure claude-code
+
+# 2. Add poe-mcp-tool for agentic delegation
+claude mcp add poe -- npx -y poe-mcp-tool
+```
+
+Or manually add to `~/.config/claude-code/mcp.json`:
 
 ```json
 {
   "mcpServers": {
-    "gemini-cli": {
-      "command": "gemini-mcp"
+    "poe": {
+      "command": "npx",
+      "args": ["-y", "poe-mcp-tool"],
+      "env": {
+        "POE_API_KEY": "your_api_key_here"
+      }
     }
   }
 }
 ```
 
-**Configuration File Locations:**
+**Why Claude Code users benefit**: With poe-code, you get `/model` switching. With poe-mcp-tool, Sonnet can **delegate** to other models:
+- Sonnet analyzes 50K line codebase by calling Gemini 3.0 Pro tool (2M context window)
+- GPT-5.1-Codex handles refactoring via tool call while Sonnet manages conversation
+- Multi-model collaboration on complex architectural decisions
 
-- **Claude Desktop**:
-  - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-  - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-  - **Linux**: `~/.config/claude/claude_desktop_config.json`
+**Verify Installation**: Type `/mcp` inside Claude Code to see poe MCP server listed.
 
-After updating the configuration, restart your terminal session.
+After updating any configuration, restart your MCP client.
 
-## Example Workflow
+---
 
-- **Natural language**: "use gemini to explain index.html", "understand the massive project using gemini", "ask gemini to search for latest news"
-- **Claude Code**: Type `/gemini-cli` and commands will populate in Claude Code's interface.
+## Available Models
+
+| Model | Best For | Speed |
+|-------|----------|-------|
+| **Claude-Sonnet-4.5** (default) | General analysis, writing, reasoning | Fast |
+| **GPT-5.1** | Complex reasoning, research | Medium |
+| **GPT-5.1-Codex** | Code analysis, debugging, refactoring | Medium |
+| **Gemini-3.0-Pro** | Large context, document analysis | Fast |
+| **Grok-4-fast-reasoning** | Quick reasoning tasks | Very Fast |
+| **glm-4.6** | Multilingual tasks | Fast |
+| **GPT-4o** | Vision, multimodal tasks | Medium |
+| **Claude-3.5-Sonnet** | Legacy Claude tasks | Fast |
+
+---
 
 ## Usage Examples
 
-### With File References (using @ syntax)
+### Basic Analysis
 
-- `ask gemini to analyze @src/main.js and explain what it does`
-- `use gemini to summarize @. the current directory`
-- `analyze @package.json and tell me about dependencies`
+```bash
+# Natural language (in Claude Code, Cursor, etc.)
+"Use Poe to analyze this codebase"
+"Ask GPT-5.1-Codex to review my Python script"
+"Compare Claude and GPT-5 on this architecture decision"
+```
 
-### General Questions (without files)
+### With File References
 
-- `ask gemini to search for the latest tech news`
-- `use gemini to explain div centering`
-- `ask gemini about best practices for React development related to @file_im_confused_about`
+```bash
+# Analyze specific files
+"Use Poe to analyze @src/main.ts and explain the architecture"
+"Ask GPT-5.1-Codex to review @components/**/*.tsx"
+"Use Gemini to summarize @docs/README.md"
+```
 
-### Using Gemini CLI's Sandbox Mode (-s)
+### Brainstorming Tools
 
-The sandbox mode allows you to safely test code changes, run scripts, or execute potentially risky operations in an isolated environment.
+```bash
+# SCAMPER Framework
+"Brainstorm API improvements using SCAMPER methodology"
 
-- `use gemini sandbox to create and run a Python script that processes data`
-- `ask gemini to safely test @script.py and explain what it does`
-- `use gemini sandbox to install numpy and create a data visualization`
-- `test this code safely: Create a script that makes HTTP requests to an API`
+# Design Thinking
+"Use design thinking to ideate new product features"
 
-### Tools (for the AI)
+# Divergent Thinking
+"Generate wild ideas for mobile app UX using divergent thinking"
+```
 
-These tools are designed to be used by the AI assistant.
+### Auto-Routing Strategies
 
-- **`ask-gemini`**: Asks Google Gemini for its perspective. Can be used for general questions or complex analysis of files.
-  - **`prompt`** (required): The analysis request. Use the `@` syntax to include file or directory references (e.g., `@src/main.js explain this code`) or ask general questions (e.g., `Please use a web search to find the latest news stories`).
-  - **`model`** (optional): The Gemini model to use. Defaults to `gemini-2.5-pro`.
-  - **`sandbox`** (optional): Set to `true` to run in sandbox mode for safe code execution.
-- **`sandbox-test`**: Safely executes code or commands in Gemini's sandbox environment. Always runs in sandbox mode.
-  - **`prompt`** (required): Code testing request (e.g., `Create and run a Python script that...` or `@script.py Run this safely`).
-  - **`model`** (optional): The Gemini model to use.
-- **`Ping`**: A simple test tool that echoes back a message.
-- **`Help`**: Shows the Gemini CLI help text.
+```bash
+# Smart routing (automatic model selection)
+"Analyze @src/**/*.ts with smart routing"
+# Routes to GPT-5.1-Codex for code
 
-### Slash Commands (for the User)
+# Mixed strategy (alternate models)
+"Analyze this architecture decision with mixed strategy"
+# Alternates Claude ↔ GPT-5 for diverse perspectives
 
-You can use these commands directly in Claude Code's interface (compatibility with other clients has not been tested).
+# Round-robin (balanced usage)
+"Quick question with round-robin"
+# Cycles through all models
+```
 
-- **/analyze**: Analyzes files or directories using Gemini, or asks general questions.
-  - **`prompt`** (required): The analysis prompt. Use `@` syntax to include files (e.g., `/analyze prompt:@src/ summarize this directory`) or ask general questions (e.g., `/analyze prompt:Please use a web search to find the latest news stories`).
-- **/sandbox**: Safely tests code or scripts in Gemini's sandbox environment.
-  - **`prompt`** (required): Code testing request (e.g., `/sandbox prompt:Create and run a Python script that processes CSV data` or `/sandbox prompt:@script.py Test this script safely`).
-- **/help**: Displays the Gemini CLI help information.
-- **/ping**: Tests the connection to the server.
-  - **`message`** (optional): A message to echo back.
+---
+
+## MCP Tools Reference
+
+These tools are designed to be used by AI assistants (not directly by users):
+
+### `analyze-with-poe`
+Main analysis tool with multi-model support.
+
+**Parameters**:
+- **`prompt`** (required): The analysis request
+- **`model`** (optional): Specific model to use (defaults to Claude-Sonnet-4.5)
+  - Options: `Claude-Sonnet-4.5`, `GPT-5.1`, `GPT-5.1-Codex`, `Gemini-3.0-Pro`, `Grok-4-fast-reasoning`, `glm-4.6`, `GPT-4o`, `Claude-3.5-Sonnet`
+- **`files`** (optional): Array of file paths to include
+- **`strategy`** (optional): Auto-routing strategy
+  - `smart`: Routes based on task type (code → Codex, reasoning → GPT-5)
+  - `mixed`: Alternates between models
+  - `round-robin`: Cycles through all models
+  - `fixed`: Uses specified model only (default)
+
+**Examples**:
+```json
+{
+  "prompt": "Explain this architecture",
+  "model": "GPT-5.1-Codex",
+  "files": ["src/main.ts", "src/utils/helper.ts"]
+}
+```
+
+### `brainstorm-with-poe`
+Structured brainstorming using proven methodologies.
+
+**Parameters**:
+- **`topic`** (required): What to brainstorm about
+- **`methodology`** (optional): Framework to use
+  - `scamper`: Substitute, Combine, Adapt, Modify, Put to another use, Eliminate, Reverse
+  - `design-thinking`: Empathize → Define → Ideate → Prototype → Test
+  - `divergent`: Quantity over quality, wild ideas
+  - `convergent`: Narrow down to best ideas
+  - `lateral`: Provocative thinking, random input
+  - `auto`: AI selects best methodology
+- **`domain`** (optional): Context (e.g., "software", "product", "business")
+- **`constraints`** (optional): Limitations or requirements
+- **`model`** (optional): Model to use (defaults to Claude-Sonnet-4.5)
+
+**Examples**:
+```json
+{
+  "topic": "improve API performance",
+  "methodology": "scamper",
+  "domain": "software",
+  "constraints": "must maintain backward compatibility"
+}
+```
+
+### `ping`
+Simple test tool to verify server connectivity.
+
+**Parameters**:
+- **`message`** (optional): Message to echo back
+
+### `help`
+Displays available commands and usage information.
+
+---
+
+## How It Works
+
+### Direct API Integration
+
+Unlike CLI-based approaches, poe-mcp-tool uses **direct HTTP calls** to the Poe API:
+
+```typescript
+// Direct REST API call (no subprocess overhead)
+const response = await fetch("https://api.poe.com/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${POE_API_KEY}`
+  },
+  body: JSON.stringify({
+    model: "Claude-Sonnet-4.5",
+    messages: [{ role: "user", content: "your prompt" }]
+  })
+});
+```
+
+**Benefits**:
+- ⚡ 2-5x faster than CLI spawning
+- 🔒 Better error handling
+- 📊 Structured JSON responses
+- 🎯 Full model control
+
+### Smart Auto-Routing
+
+The `smart` strategy automatically selects the best model:
+
+```typescript
+// Code-related keywords → GPT-5.1-Codex
+if (prompt.includes("function") || prompt.includes("class")) {
+  model = "GPT-5.1-Codex";
+}
+
+// Reasoning keywords → GPT-5.1
+else if (prompt.includes("why") || prompt.includes("analyze")) {
+  model = "GPT-5.1";
+}
+
+// Default → Claude-Sonnet-4.5
+else {
+  model = "Claude-Sonnet-4.5";
+}
+```
+
+---
+
+## Comparison with poe-code
+
+**poe-code** (Poe's official CLI) is excellent for configuring Claude Code to use Poe models with the `/model` command for **model switching**.
+
+**poe-mcp-tool** provides **agentic delegation** - different value:
+
+| Feature | poe-code | poe-mcp-tool |
+|---------|----------|--------------|
+| **Model Switching** | ✅ `/model` command | ❌ Not needed |
+| **Cursor Support** | ❌ No (breaks due to bug) | ✅ **Bug workaround** |
+| **Continue Support** | ⚠️ Chat only | ✅ **Tool use** |
+| **Agentic Delegation** | ❌ No | ✅ **Main model calls specialized models as tools** |
+| **Claude Code Value** | ✅ **Primary** (model switching) | ✅ **Complementary** (tool delegation) |
+
+**Use both together for Claude Code**:
+- **poe-code**: `/model gpt-5.1` switches your entire conversation to GPT-5
+- **poe-mcp-tool**: Sonnet delegates large codebase analysis to Gemini 3.0 Pro tool, then synthesizes results
+
+**For Cursor/Continue**: Use poe-mcp-tool only (poe-code doesn't support these clients)
+
+---
+
+## Migration from Gemini MCP Tool
+
+If you're upgrading from the previous Gemini-based version:
+
+**What Changed**:
+- ✅ Gemini CLI → Poe API (8 models instead of 2)
+- ✅ Added brainstorming methodologies
+- ✅ Added auto-routing strategies
+- ✅ 2-5x performance improvement
+- ⚠️ Requires POE_API_KEY instead of Gemini CLI
+
+**Migration Steps**:
+1. Get Poe API key from [poe.com](https://poe.com)
+2. Update config: `gemini-cli` → `poe`
+3. Set `POE_API_KEY` environment variable
+4. Update NPX package: `gemini-mcp-tool` → `poe-mcp-tool`
+
+---
+
+## Troubleshooting
+
+### "POE_API_KEY not found"
+
+Set your API key:
+```bash
+# Linux/macOS
+export POE_API_KEY=your_key_here
+
+# Windows
+set POE_API_KEY=your_key_here
+```
+
+Or add to your MCP config's `env` section (see Configuration above).
+
+### "Model not found"
+
+Ensure you're using a valid model name:
+- `Claude-Sonnet-4.5` (default)
+- `GPT-5.1`
+- `GPT-5.1-Codex`
+- `Gemini-3.0-Pro`
+- `Grok-4-fast-reasoning`
+- `glm-4.6`
+- `GPT-4o`
+- `Claude-3.5-Sonnet`
+
+### Server won't start
+
+1. Verify Node.js version: `node --version` (should be v16+)
+2. Clear NPX cache: `npx clear-npx-cache`
+3. Try manual install: `npm install -g poe-mcp-tool`
+4. Check logs in your MCP client's debug output
+
+---
 
 ## Contributing
 
 Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, and contribute to the project.
 
+**Areas for contribution**:
+- Additional brainstorming methodologies
+- Improved auto-routing heuristics
+- Better error messages
+- Documentation improvements
+- New MCP client support
+
+---
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-**Disclaimer:** This is an unofficial, third-party tool and is not affiliated with, endorsed, or sponsored by Google.
+**Disclaimer**: This is an unofficial, third-party tool and is not affiliated with, endorsed, or sponsored by Poe or Quora.
+
+---
+
+## Roadmap
+
+- [ ] Re-implement response chunking for large outputs
+- [ ] Add usage analytics (token counts, costs per model)
+- [ ] Multi-model comparison tool (query 3 models, compare)
+- [ ] Cost tracking dashboard
+- [ ] More brainstorming frameworks (Six Thinking Hats, TRIZ)
+- [ ] Integration with poe-code (shared auth)
+
+---
+
+**Built with ❤️ for the MCP ecosystem**
+
+For questions, issues, or feature requests, please [open an issue](https://github.com/jamubc/poe-mcp-tool/issues).

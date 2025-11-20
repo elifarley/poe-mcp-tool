@@ -1,7 +1,7 @@
 {
   "name": "poe-mcp-tool",
   "version": "2.0.0",
-  "description": "MCP server for Poe API - Access Claude, GPT-5, Codex, Gemini, and more",
+  "description": "MCP server for Poe API - Agentic delegation & Cursor bug workaround. Access Claude, GPT-5, Codex, Gemini via tools.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -36,12 +36,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jamubc/gemini-mcp-tool.git"
+    "url": "git+https://github.com/jamubc/poe-mcp-tool.git"
   },
   "bugs": {
-    "url": "https://github.com/jamubc/gemini-mcp-tool/issues"
+    "url": "https://github.com/jamubc/poe-mcp-tool/issues"
   },
-  "homepage": "https://github.com/jamubc/gemini-mcp-tool#readme",
+  "homepage": "https://github.com/jamubc/poe-mcp-tool#readme",
   "engines": {
     "node": ">=16.0.0"
   },
