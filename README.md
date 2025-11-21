@@ -79,7 +79,44 @@ Before using this tool, ensure you have:
 
 ## Quick Start
 
-### For Cursor (Primary Use Case - Bug Workaround)
+### For Developers (Makefile Workflow)
+
+If you're a developer working on this project, use the Makefile for streamlined development:
+
+```bash
+# One-command setup
+make setup
+
+# Install for Claude Code
+make install-claude-code
+
+# Start development with hot reload
+make dev
+
+# Run tests and linting
+make test
+make lint
+```
+
+**⚡ Why use Makefile?**
+- 🚀 Automated setup and dependency management
+- 🔧 Built-in Node.js version validation
+- 📦 Seamless Claude Code integration
+- 🏷️  Safe release workflow with git tagging
+- 🧪 One-command testing and linting
+
+<details>
+<summary>👀 See all Makefile commands</summary>
+
+Run `make help` to see all available commands, including build, deploy, and Claude Code integration targets.
+
+</details>
+
+---
+
+### For Users (Direct Installation)
+
+#### For Cursor (Primary Use Case - Bug Workaround)
 
 Add to Cursor's MCP settings (`.cursor/mcp.json` or via Cursor settings UI):
 
@@ -429,7 +466,46 @@ Ensure you're using a valid model name:
 
 ## Contributing
 
-Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, and contribute to the project.
+Contributions are welcome! The project uses a comprehensive Makefile to streamline development workflows.
+
+### Quick Start for Contributors
+
+```bash
+# Clone and set up
+git clone https://github.com/jamubc/poe-mcp-tool.git
+cd poe-mcp-tool
+
+# One-command development setup
+make setup
+
+# Install for local testing (optional)
+make install-claude-code
+
+# Start development
+make dev
+```
+
+### Development Workflow
+
+Use these Makefile commands for efficient development:
+
+```bash
+# During development
+make dev          # Start with hot reload
+make watch        # Watch for changes
+make test         # Run tests
+make lint         # Type checking
+make format       # Format code (if prettier installed)
+
+# Before committing
+make pre-commit   # Run all checks
+
+# Building and testing
+make clean        # Clean artifacts
+make build        # Production build
+```
+
+### Contributing Areas
 
 **Areas for contribution**:
 - Additional brainstorming methodologies
@@ -437,6 +513,22 @@ Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING
 - Better error messages
 - Documentation improvements
 - New MCP client support
+- Makefile enhancements and workflow improvements
+
+### Release Process
+
+The project uses a streamlined release workflow via Makefile:
+
+```bash
+# Full release (build + test + publish + tag)
+make release
+
+# Individual steps
+make test lint    # Pre-release checks
+make publish      # Publish to npm
+```
+
+All changes should pass `make pre-commit` before submission. Use `hug` for all git operations as per project guidelines.
 
 ---
 

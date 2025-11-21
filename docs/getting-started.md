@@ -32,21 +32,77 @@
 Before installing, ensure you have:
 
 - **[Node.js](https://nodejs.org/)** v16.0.0 or higher
-- **[Google Gemini CLI](https://github.com/google-gemini/gemini-cli)** installed and configured on your system
+- **[Poe API Key](https://poe.com)** (get one from Poe settings)
 - **[Claude Desktop](https://claude.ai/download)** or **[Claude Code](https://www.anthropic.com/claude-code)** with MCP support
+
+### For Developers Working on This Project
+
+If you're contributing to poe-mcp-tool, use the Makefile workflow:
+
+```bash
+# Clone and set up development environment
+git clone https://github.com/jamubc/poe-mcp-tool.git
+cd poe-mcp-tool
+
+# One-command setup (installs deps, validates Node.js, builds)
+make setup
+
+# Configure for Claude Code (optional)
+make install-claude-code
+
+# Start development
+make dev
+```
+
+See [Development Workflow](/usage/development-workflow) for complete developer guide.
 
 
 ## Claude Code (Recommended)
-::: warning 💡 gemini-mcp-tool is tested extensively with claude code
+::: tip 💡 poe-mcp-tool is designed for seamless Claude Code integration
 :::
-Claude Code offers the smoothest experience.
+Claude Code offers the smoothest experience with agentic delegation.
+
+### Method 1: One-Command Installation
 
 ```bash
-# install for claude code
-claude mcp add gemini-cli -- npx -y gemini-mcp-tool
+# Install for Claude Code using Makefile (recommended)
+make install-claude-code
 
 # Start Claude Code - it's automatically configured!
 claude
+```
+
+### Method 2: Manual Installation
+
+```bash
+# Install for Claude Code
+claude mcp add poe -- npx -y poe-mcp-tool
+
+# Start Claude Code
+claude
+```
+
+### Method 3: Manual Configuration
+
+Add to `~/.config/claude-code/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "poe": {
+      "command": "npx",
+      "args": ["-y", "poe-mcp-tool"],
+      "env": {
+        "POE_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+Set your API key:
+```bash
+export POE_API_KEY=your_api_key_here
 ```
 
 ## Claude Desktop
@@ -70,9 +126,12 @@ For Claude Desktop users, add this to your configuration file:
 ```json
 {
   "mcpServers": {
-    "gemini-cli": {
+    "poe": {
       "command": "npx",
-      "args": ["-y", "gemini-mcp-tool"]
+      "args": ["-y", "poe-mcp-tool"],
+      "env": {
+        "POE_API_KEY": "your_api_key_here"
+      }
     }
   }
 }
@@ -83,7 +142,7 @@ You must restart Claude Desktop ***completely*** for changes to take effect.
 :::
 ## Other MCP Clients
 
-Gemini MCP Tool works with 40+ MCP clients! Here are the common configuration patterns:
+Poe MCP Tool works with 40+ MCP clients! Here are the common configuration patterns:
 
 ### STDIO Transport (Most Common)
 ```json
@@ -91,7 +150,10 @@ Gemini MCP Tool works with 40+ MCP clients! Here are the common configuration pa
   "transport": {
     "type": "stdio",
     "command": "npx",
-    "args": ["-y", "gemini-mcp-tool"]
+    "args": ["-y", "poe-mcp-tool"],
+    "env": {
+      "POE_API_KEY": "your_api_key_here"
+    }
   }
 }
 ```
@@ -105,13 +167,15 @@ Gemini MCP Tool works with 40+ MCP clients! Here are the common configuration pa
 
 ```json
 {
-  "gemini-cli": {
+  "poe": {
     "command": "npx",
     "args": [
       "-y",
-      "gemini-mcp-tool"
+      "poe-mcp-tool"
     ],
-    "env": {},
+    "env": {
+      "POE_API_KEY": "your_api_key_here"
+    },
     "working_directory": null,
     "start_on_launch": true
   }
@@ -122,10 +186,10 @@ Gemini MCP Tool works with 40+ MCP clients! Here are the common configuration pa
 </details>
 ### Generic Setup Steps
 
-1. **Install Prerequisites**: Ensure [Gemini CLI](https://github.com/google-gemini/gemini-cli) is installed
+1. **Get Poe API Key**: Get one from [poe.com](https://poe.com) settings
 2. **Add Server Config**: Use the STDIO transport pattern above
 3. **Restart Client**: Most clients require restart after config changes
-4. **Test Connection**: Try `/gemini-cli:ping` or natural language commands
+4. **Test Connection**: Try natural language commands with Poe models
 
 ## Verify Your Setup
 
@@ -134,17 +198,17 @@ Once configured, test that everything is working:
 ### 1. Basic Connectivity Test
 Type in Claude:
 ```
-/gemini-cli:ping "Hello from Gemini MCP!"
+"Use Poe to analyze this file" @README.md
 ```
 
 ### 2. Test File Analysis
 ```
-/gemini-cli:analyze @README.md summarize this file
+"Ask GPT-5.1-Codex to review my Python script"
 ```
 
-### 3. Test Sandbox Mode
+### 3. Test Brainstorming
 ```
-/gemini-cli:sandbox create a simple Python hello world script
+"Brainstorm API improvements using SCAMPER methodology with Poe"
 ```
 
 ## Quick Command Reference
@@ -152,20 +216,19 @@ Type in Claude:
 Once installed, you can use natural language or slash commands:
 
 ### Natural Language Examples
-- "use gemini to explain index.html"
-- "understand the massive project using gemini"
-- "ask gemini to search for latest news"
+- "Use Poe to analyze this codebase"
+- "Ask GPT-5.1-Codex to review my Python script"
+- "Use Gemini 3.0 Pro to summarize this documentation"
 
-### Slash Commands in Claude Code
-Type `/gemini-cli` and these commands will appear:
-- `/gemini-cli:analyze` - Analyze files or ask questions
-- `/gemini-cli:sandbox` - Safe code execution
-- `/gemini-cli:help` - Show help information
-- `/gemini-cli:ping` - Test connectivity
+### Available Tools
+- `analyze-with-poe` - Main analysis with multiple models
+- `brainstorm-with-poe` - Structured brainstorming frameworks
+- `ping` - Test MCP server connectivity
+- `help` - Show available tools and usage
 
 ## Need a Different Client?
 
-Don't see your MCP client listed? Gemini MCP Tool uses standard MCP protocol and works with any compatible client.
+Don't see your MCP client listed? Poe MCP Tool uses standard MCP protocol and works with any compatible client.
 
 ::: tip Find More MCP Clients
 - **Official List**: [modelcontextprotocol.io/clients](https://modelcontextprotocol.io/clients)
